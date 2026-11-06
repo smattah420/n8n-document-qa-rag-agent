@@ -1,0 +1,286 @@
+{
+  "name": "Building a Document Q&A Agent with RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## HR Policy Document",
+        "height": 80,
+        "width": 220,
+        "color": 4
+      },
+      "id": "98ce049a-dc3a-4328-a990-2c467e4d9950",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "content": "**Example Prompt**\n1. What is the process for applying leave?\n2. What happens if I exceed my leave balance?\n3. What is the notice period for employees?\n4. How does the company handle sick leave?\n5. Can an employee carry forward unused leaves?\n6. What is the policy for working during probation?\n7. What are the rules for termination?\n8. What benefits are provided to full-time employees?",
+        "height": 260,
+        "width": 340,
+        "color": 3
+      },
+      "id": "4c6a7d56-34b4-4018-b419-b496c563de2c",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload your file here",
+        "formDescription": "Upload the HR policy document (PDF, DOCX or TXT) to add it to the knowledge base.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "File",
+              "fieldType": "file",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bf0f7b48-55ed-4743-9241-e54dbb1be621",
+      "name": "Upload your file here",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -432,
+        -192
+      ],
+      "webhookId": "e0294cdb-fc09-4124-bca6-a93345521caf"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "clearStore": true
+      },
+      "id": "66ff1bb0-5221-45a3-b456-405ab9bc19ec",
+      "name": "Insert Data to Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "id": "10d07f32-5fb7-4c17-b04a-7e36e6d5c9f4",
+      "name": "Embeddings Ollama",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        400,
+        256
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "SND5toMisCNorhOB",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "loader": "pdfLoader",
+        "binaryDataKey": "File",
+        "options": {}
+      },
+      "id": "42d31557-5402-4e12-a702-97a0a2a287d6",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "8f87c54f-b68e-4c93-ac6e-7ddaafe3d2e2",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "245dfbe3-28bd-4160-9022-124c2f9a73b4",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        -224
+      ],
+      "webhookId": "9e8d7c6b-5a4f-4b3e-8d2c-1a0b9c8d7e6f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3115fb9e-f30f-4512-b144-785b997f5be2",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1120,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "id": "a01898fd-8d59-4229-bb41-7fc484667d85",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        688,
+        48
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "SWIZdLadzigRm3cS",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowlege_base",
+        "toolDescription": "Use this knowleage base to answer question from the user"
+      },
+      "id": "9249b08d-0c04-4992-91cb-367ac20cc92a",
+      "name": "knowlege_base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        64
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Upload your file here": {
+      "main": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "knowlege_base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "knowlege_base": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "4e6de52b-2067-4f4a-8df5-1ca81f0d59e0",
+  "meta": {
+    "instanceId": "9b6d553ba0b1f2d80f8d61968c0de8e067456c5823865c7afc70c331482e437b"
+  },
+  "nodeGroups": [],
+  "id": "lLS8RAM24VxACp8A",
+  "tags": []
+}
